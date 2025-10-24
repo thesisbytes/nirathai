@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import type { User } from "@prisma/client";
 
 type GroupRow = { userId: string; _sum: { xp: number | null } };
 
@@ -11,8 +12,8 @@ export default async function Leaderboard() {
   })) as GroupRow[];
 
   const userIds = rows.map((r) => r.userId);
-  const users = await db.user.findMany({ where: { id: { in: userIds } } });
-  const map = new Map(users.map((u) => [u.id, u]));
+  const users: User[] = await db.user.findMany({ where: { id: { in: userIds } } });
+  const map = new Map(users.map((u: User) => [u.id, u]));
 
   return (
     <section className="grid gap-4">
