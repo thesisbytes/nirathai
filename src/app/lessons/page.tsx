@@ -1,34 +1,44 @@
-export const dynamic = 'force-dynamic';      // do not prerender
-// OR, if you prefer ISR without build-time fetch:
-export const revalidate = 0;                 // no static cache
-// (App Router also supports:)
-export const fetchCache = 'force-no-store';
+// app/lessons/page.tsx
+export const dynamic = 'force-dynamic'; // avoid prerender hitting DB at build
+export const revalidate = 0;            // no static cache
+export const runtime = 'nodejs';        // Prisma needs Node runtime
 
-import { db } from "@/lib/db";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";  // <- use ONE client
 
 type WeekOnly = { week: number };
 
-import { prisma } from '@/lib/prisma';
+export default async function LessonsPage() {
+  let weeks: WeekOnly[] = [];
 
-export default async function Page() {
   try {
-    const words = await prisma.word.findMany();
-    // render with words
+    weeks = (await prisma.word.findMany({
+      select: { week: true },
+      distinct: ["week"],
+      orderBy: { week: "asc" },
+    })) as WeekOnly[];
   } catch (err) {
-    // render an empty state instead of throwing during build
-    return <EmptyState message="No data yet. Check back soon!" />;
+    // Friendly fallback instead of crashing during build/deploy
+    return (
+      <section className="grid gap-4">
+        <h1 className="text-2xl font-semibold">Lessons</h1>
+        <p className="text-sm text-gray-600">
+          No data yet. If this is the first deploy, run your Prisma migrations on Heroku.
+        </p>
+      </section>
+    );
   }
-}
 
-export default async function Lessons() {
-  const weeks = (await db.word.findMany({
-    select: { week: true },
-    distinct: ["week"],
-    orderBy: { week: "asc" },
-  })) as WeekOnly[];
+  if (!weeks.length) {
+    return (
+      <section className="grid gap-4">
+        <h1 className="text-2xl font-semibold">Lessons</h1>
+        <p className="text-sm text-gray-600">No lessons yet.</p>
+      </section>
+    );
+  }
 
-  const list = weeks.map((w: WeekOnly) => w.week);
+  const list = weeks.map(w => w.week);
 
   return (
     <section className="grid gap-4">
