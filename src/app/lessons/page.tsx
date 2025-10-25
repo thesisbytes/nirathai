@@ -9,6 +9,18 @@ import Link from "next/link";
 
 type WeekOnly = { week: number };
 
+import { prisma } from '@/lib/prisma';
+
+export default async function Page() {
+  try {
+    const words = await prisma.word.findMany();
+    // render with words
+  } catch (err) {
+    // render an empty state instead of throwing during build
+    return <EmptyState message="No data yet. Check back soon!" />;
+  }
+}
+
 export default async function Lessons() {
   const weeks = (await db.word.findMany({
     select: { week: true },
