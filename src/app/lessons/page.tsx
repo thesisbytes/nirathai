@@ -1,3 +1,9 @@
+export const dynamic = 'force-dynamic';      // do not prerender
+// OR, if you prefer ISR without build-time fetch:
+export const revalidate = 0;                 // no static cache
+// (App Router also supports:)
+export const fetchCache = 'force-no-store';
+
 import { db } from "@/lib/db";
 import Link from "next/link";
 
